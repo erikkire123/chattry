@@ -39,33 +39,48 @@
             }
         }
 
-        async function loadMessages() {
-            const res = await fetch(apiUrl, { headers: { "X-Master-Key": apiKey } });
-            const data = await res.json();
-            const messages = data.record || [];
-            document.getElementById("chat-box").innerHTML = messages.map(msg => 
-                `<p><strong>${msg.user}:</strong> ${msg.text}</p>`
-            ).join("");
-        }
+       async function loadMessages() {
+    const res = await fetch(apiUrl, { headers: { "X-Master-Key": apiKey } });
+    const data = await res.json();
 
-        async function sendMessage() {
-            const text = document.getElementById("message").value;
-            if (!text) return;
+    console.log("Fetched data:", data); // Debugging output
 
-            const res = await fetch(apiUrl, { headers: { "X-Master-Key": apiKey } });
-            const data = await res.json();
-            const messages = data.record || [];
-            messages.push({ user: username, text });
+    // Check where the messages array is located
+    const messages = data.record && Array.isArray(data.record) ? data.record : [];
 
-            await fetch(apiUrl, {
-                method: "PUT",
-                headers: { "X-Master-Key": apiKey, "Content-Type": "application/json" },
-                body: JSON.stringify(messages)
-            });
+    document.getElementById("chat-box").innerHTML = messages.map(msg => 
+        `<p><strong>${msg.user}:</strong> ${msg.text}</p>`
+    ).join("");
+}
 
-            document.getElementById("message").value = "";
-            loadMessages();
-        }
+      async function sendMessage() {
+    const text = document.getElementById("message").value;
+    if (!text) return;
+
+    const res = await fetch(apiUrl, { headers: { "X-Master-Key": apiKey } });
+    const data = await res.json();
+
+    console.log("Before update:", data); // Debugging output
+
+    // Ensure data.record is an array
+    let messages = data.record;
+    if (!Array.isArray(messages)) {
+        messages = []; // Reset if it’s not an array
+    }
+
+    messages.push({ user: username, text });
+
+    console.log("Updated messages:", messages); // Debugging output
+
+    await fetch(apiUrl, {
+        method: "PUT",
+        headers: { "X-Master-Key": apiKey, "Content-Type": "application/json" },
+        body: JSON.stringify(messages)
+    });
+
+    document.getElementById("message").value = "";
+    loadMessages();
+}
 
         setInterval(loadMessages, 3000);
     </script>
